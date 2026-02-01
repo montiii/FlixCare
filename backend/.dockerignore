@@ -1,0 +1,10 @@
+target/
+*.jar
+*.war
+*.log
+.mvn/
+mvnw
+mvnw.cmd
+.idea/
+*.iml
+.DS_Store

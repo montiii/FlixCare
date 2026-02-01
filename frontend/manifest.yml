@@ -1,0 +1,11 @@
+---
+applications:
+- name: flixcare-frontend
+  memory: 256M
+  instances: 1
+  buildpack: staticfile_buildpack
+  path: dist
+  routes:
+    - route: flixcare.cfapps.sap.hana.ondemand.com
+  env:
+    FORCE_HTTPS: true
