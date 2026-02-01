@@ -8,10 +8,9 @@ yarn-error.log*
 dist/
 build/
 
-# Environment variables
-.env
+# Environment variables (secrets only)
 .env.local
-.env.production.local
+.env.*.local
 
 # IDE
 .vscode/
