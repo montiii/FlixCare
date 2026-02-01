@@ -10,7 +10,7 @@ import java.util.Map;
 @RestController
 @RequestMapping
 @CrossOrigin(origins = "*")
-public class AuthController {
+public class HealthController {
 
     @GetMapping("/health")
     public ResponseEntity<String> healthCheck() {
