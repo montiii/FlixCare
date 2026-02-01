@@ -1,0 +1,10 @@
+[phases.setup]
+nixPkgs = ["jdk17", "maven", "nodejs-20_x"]
+
+[phases.build]
+cmds = [
+    "cd backend && mvn clean package -DskipTests"
+]
+
+[phases.start]
+cmd = "java -jar backend/target/flixcare-0.0.1-SNAPSHOT.jar"
