@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/h2-console/**", "/actuator/health").permitAll()
+                        .requestMatchers("/api/auth/login", "/h2-console/**", "/health").permitAll()
                         .requestMatchers("/api/**").authenticated()  // Nur API schützen
                         .anyRequest().permitAll()  // Frontend-Dateien erlauben
                 )
