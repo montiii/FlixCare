@@ -69,9 +69,9 @@ export default function Dashboard() {
     todayDiaperChanges: 0,
   });
   const [weightData, setWeightData] = useState<WeightChartData[]>([]);
+  const [weightRange, setWeightRange] = useState<'last10' | 'all'>('last10');
   const [diaperData, setDiaperData] = useState<DiaperChartData[]>([]);
   const [diaperAverage, setDiaperAverage] = useState({ nass: 0, voll: 0 });
-  const [weightRange, setWeightRange] = useState<'5days' | '2weeks'>('5days');
   const [diaperRange, setDiaperRange] = useState<'5days' | '2weeks'>('5days');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -229,18 +229,29 @@ export default function Dashboard() {
   };
 
   const formatTimeAgo = (dateTime: string) => {
+    // Backend liefert UTC-Zeit ohne 'Z': "2026-02-01T08:33:00"
+    // JavaScript interpretiert das als lokale Zeit!
+    // Lösung: 'Z' anhängen wenn es fehlt
+    const utcDateTime = dateTime.endsWith('Z') ? dateTime : dateTime + 'Z';
+
     const now = new Date();
-    const time = new Date(dateTime);
+    const time = new Date(utcDateTime);
     const diffMs = now.getTime() - time.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) return t.dashboard.justNow;
-    if (diffMins < 60) return `${diffMins} ${t.dashboard.minutesAgo}`;
-    if (diffHours < 24) return `${diffHours} ${t.dashboard.hoursAgo}`;
-    if (diffDays === 1) return t.dashboard.yesterday;
-    return `${diffDays} ${t.dashboard.daysAgo}`;
+    // Format time as HH:MM (lokale Zeit)
+    const hours = time.getHours().toString().padStart(2, '0');
+    const minutes = time.getMinutes().toString().padStart(2, '0');
+    const timeStr = `${hours}:${minutes} Uhr`;
+
+    // Add relative time
+    if (diffMins < 1) return `${timeStr} (${t.dashboard.justNow})`;
+    if (diffMins < 60) return `${timeStr} (${diffMins} ${t.dashboard.minutesAgo})`;
+    if (diffHours < 24) return `${timeStr} (${diffHours} ${t.dashboard.hoursAgo})`;
+    if (diffDays === 1) return `${timeStr} (${t.dashboard.yesterday})`;
+    return `${timeStr} (${diffDays} ${t.dashboard.daysAgo})`;
   };
 
   const processWeightData = (weights: WeightRecord[]) => {
@@ -254,15 +265,11 @@ export default function Dashboard() {
       new Date(a.measurementTime).getTime() - new Date(b.measurementTime).getTime()
     );
 
-    // Filter based on selected range
-    const now = new Date();
-    const daysToShow = weightRange === '5days' ? 5 : 14;
-    const cutoffDate = new Date(now.getTime() - daysToShow * 24 * 60 * 60 * 1000);
-
-    const filtered = sorted.filter(w => new Date(w.measurementTime) >= cutoffDate);
+    // Get measurements based on selected range
+    const measurements = weightRange === 'last10' ? sorted.slice(-10) : sorted;
 
     // Format data for chart
-    const chartData: WeightChartData[] = filtered.map(w => {
+    const chartData: WeightChartData[] = measurements.map(w => {
       const date = new Date(w.measurementTime);
       const dateStr = `${date.getDate()}.${date.getMonth() + 1}.`;
       return {
@@ -468,36 +475,36 @@ export default function Dashboard() {
             </Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Box
-                onClick={() => setWeightRange('5days')}
+                onClick={() => setWeightRange('last10')}
                 sx={{
                   px: 2,
                   py: 0.5,
                   borderRadius: 1,
                   cursor: 'pointer',
-                  bgcolor: weightRange === '5days' ? 'primary.main' : 'grey.200',
-                  color: weightRange === '5days' ? 'white' : 'text.primary',
+                  bgcolor: weightRange === 'last10' ? 'primary.main' : 'grey.200',
+                  color: weightRange === 'last10' ? 'white' : 'text.primary',
                   fontSize: '0.875rem',
                   fontWeight: 500,
                   transition: 'all 0.2s',
                 }}
               >
-                5 Tage
+                Letzte 10
               </Box>
               <Box
-                onClick={() => setWeightRange('2weeks')}
+                onClick={() => setWeightRange('all')}
                 sx={{
                   px: 2,
                   py: 0.5,
                   borderRadius: 1,
                   cursor: 'pointer',
-                  bgcolor: weightRange === '2weeks' ? 'primary.main' : 'grey.200',
-                  color: weightRange === '2weeks' ? 'white' : 'text.primary',
+                  bgcolor: weightRange === 'all' ? 'primary.main' : 'grey.200',
+                  color: weightRange === 'all' ? 'white' : 'text.primary',
                   fontSize: '0.875rem',
                   fontWeight: 500,
                   transition: 'all 0.2s',
                 }}
               >
-                2 Wochen
+                Alle
               </Box>
             </Box>
           </Box>
@@ -672,3 +679,4 @@ export default function Dashboard() {
     </Container>
   );
 }
+ 
