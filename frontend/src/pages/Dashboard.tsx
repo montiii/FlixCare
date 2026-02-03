@@ -78,6 +78,15 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const t = useTranslation();
 
+  // Helper function to parse UTC datetime from backend
+  // Backend liefert UTC-Zeit ohne 'Z': "2026-02-01T08:33:00"
+  // JavaScript interpretiert das als lokale Zeit!
+  // Lösung: 'Z' anhängen wenn es fehlt
+  const parseUTCDateTime = (dateTime: string) => {
+    const utcDateTime = dateTime.endsWith('Z') ? dateTime : dateTime + 'Z';
+    return new Date(utcDateTime);
+  };
+
   const quickActions = [
     { icon: <Restaurant />, name: t.nav.feed, path: '/feeding', color: '#4caf50' },
     { icon: <Thermostat />, name: t.nav.temp, path: '/temperature', color: '#ff9800' },
@@ -155,13 +164,34 @@ export default function Dashboard() {
       );
 
       const age = calculateAge(baby.birthDate);
+
+      // Get today's start in local time (00:00:00)
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const todayFeedings = sortedFeedings.filter(f => new Date(f.feedingTime) >= today).length;
+
+      console.log('📊 Dashboard - Today starts at:', today.toString());
+      console.log('📊 Dashboard - All feedings:', sortedFeedings.length);
+
+      const todayFeedings = sortedFeedings.filter(f => {
+        const feedingDate = parseUTCDateTime(f.feedingTime);
+        const isToday = feedingDate >= today;
+
+        if (sortedFeedings.length <= 3) {
+          // Only log first 3 feedings for debugging
+          console.log('🍼 Feeding:', f.feedingTime, '→', feedingDate.toString(), '→ isToday:', isToday);
+        }
+
+        return isToday;
+      }).length;
 
       // Separate cleaning categories
       const diaperChanges = sortedCleanings.filter(c => c.cleaningType === 'DIAPER_CHANGE');
-      const todayDiaperChanges = diaperChanges.filter(c => new Date(c.cleaningTime) >= today).length;
+      const todayDiaperChanges = diaperChanges.filter(c => {
+        const cleaningDate = parseUTCDateTime(c.cleaningTime);
+        return cleaningDate >= today;
+      }).length;
+
+      console.log('📊 Dashboard - Today feedings:', todayFeedings, '| Today diapers:', todayDiaperChanges);
 
       const baths = sortedCleanings.filter(c => c.cleaningType === 'BATH');
       const spongeBaths = sortedCleanings.filter(c => c.cleaningType === 'SPONGE_BATH');
@@ -229,13 +259,8 @@ export default function Dashboard() {
   };
 
   const formatTimeAgo = (dateTime: string) => {
-    // Backend liefert UTC-Zeit ohne 'Z': "2026-02-01T08:33:00"
-    // JavaScript interpretiert das als lokale Zeit!
-    // Lösung: 'Z' anhängen wenn es fehlt
-    const utcDateTime = dateTime.endsWith('Z') ? dateTime : dateTime + 'Z';
-
     const now = new Date();
-    const time = new Date(utcDateTime);
+    const time = parseUTCDateTime(dateTime);
     const diffMs = now.getTime() - time.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
@@ -246,10 +271,17 @@ export default function Dashboard() {
     const minutes = time.getMinutes().toString().padStart(2, '0');
     const timeStr = `${hours}:${minutes} Uhr`;
 
-    // Add relative time
+    // Add relative time with more precision
     if (diffMins < 1) return `${timeStr} (${t.dashboard.justNow})`;
     if (diffMins < 60) return `${timeStr} (${diffMins} ${t.dashboard.minutesAgo})`;
-    if (diffHours < 24) return `${timeStr} (${diffHours} ${t.dashboard.hoursAgo})`;
+    if (diffHours < 24) {
+      const remainingMins = diffMins % 60;
+      if (remainingMins === 0) {
+        return `${timeStr} (${diffHours} ${t.dashboard.hoursAgo})`;
+      } else {
+        return `${timeStr} (${diffHours} Std. ${remainingMins} Min. her)`;
+      }
+    }
     if (diffDays === 1) return `${timeStr} (${t.dashboard.yesterday})`;
     return `${timeStr} (${diffDays} ${t.dashboard.daysAgo})`;
   };
@@ -262,7 +294,7 @@ export default function Dashboard() {
 
     // Sort by date ascending
     const sorted = [...weights].sort((a, b) =>
-      new Date(a.measurementTime).getTime() - new Date(b.measurementTime).getTime()
+      parseUTCDateTime(a.measurementTime).getTime() - parseUTCDateTime(b.measurementTime).getTime()
     );
 
     // Get measurements based on selected range
@@ -270,7 +302,7 @@ export default function Dashboard() {
 
     // Format data for chart
     const chartData: WeightChartData[] = measurements.map(w => {
-      const date = new Date(w.measurementTime);
+      const date = parseUTCDateTime(w.measurementTime);
       const dateStr = `${date.getDate()}.${date.getMonth() + 1}.`;
       return {
         date: dateStr,
@@ -312,7 +344,7 @@ export default function Dashboard() {
       nextDay.setDate(nextDay.getDate() + 1);
 
       const dayDiapers = diaperChanges.filter(d => {
-        const diaperDate = new Date(d.cleaningTime);
+        const diaperDate = parseUTCDateTime(d.cleaningTime);
         return diaperDate >= day && diaperDate < nextDay;
       });
 
@@ -678,5 +710,4 @@ export default function Dashboard() {
       </SpeedDial>
     </Container>
   );
-}
- 
+} 
