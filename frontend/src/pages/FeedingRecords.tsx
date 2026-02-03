@@ -43,6 +43,7 @@ export default function FeedingRecords() {
   const [amount, setAmount] = useState<string>('');
   const [duration, setDuration] = useState<string>('');
   const [dateTime, setDateTime] = useState<string>(getLocalDateTimeString());
+  const [quickAddAmount, setQuickAddAmount] = useState<string>('');
   const t = useTranslation();
 
   // Links: Brust-bezogene Optionen
@@ -100,15 +101,20 @@ export default function FeedingRecords() {
       console.log('🕐 handleQuickAdd - Input dateTime:', dateTime);
       console.log('🕐 handleQuickAdd - ISO String (UTC):', isoString);
 
+      // Get the ML amount if provided (optional)
+      const mlAmount = quickAddAmount ? Number(quickAddAmount) : undefined;
+
       await feedingRecordService.create({
         babyId,
         feedingTime: isoString,
         feedingType: type,
+        amountMl: mlAmount,
         notes: '',
       });
       await loadData();
       setShowForm(false);
       setDateTime(getLocalDateTimeString()); // Reset to current time
+      setQuickAddAmount(''); // Reset ML amount
     } catch (err) {
       setError(t.common.failedToSave);
       console.error(err);
@@ -233,6 +239,19 @@ export default function FeedingRecords() {
               <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
                 {t.feeding.quickAdd}
               </Typography>
+
+              {/* ML Input field for all feeding types */}
+              <TextField
+                label="ml (optional)"
+                type="number"
+                value={quickAddAmount}
+                onChange={(e) => setQuickAddAmount(e.target.value)}
+                fullWidth
+                size="small"
+                inputProps={{ min: 0, step: 10 }}
+                sx={{ mb: 2 }}
+              />
+
               <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5 }}>
                 {/* Linke Spalte: Brust-Optionen */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
