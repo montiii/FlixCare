@@ -8,8 +8,6 @@ FlixCare Backend is a Spring Boot microservice for tracking baby care activities
 - Spring Boot 3.2.1
 - Spring Data JPA
 - PostgreSQL
-- H2 Database (for development)
-- OpenAPI/Swagger
 - Lombok
 
 ## Getting Started
@@ -31,15 +29,6 @@ mvn spring-boot:run
 ```
 
 The application will start on `http://localhost:8080`
-
-### API Documentation
-Access Swagger UI at: `http://localhost:8080/swagger-ui.html`
-
-### H2 Console (Development)
-Access H2 Console at: `http://localhost:8080/h2-console`
-- JDBC URL: `jdbc:h2:mem:flixcaredb`
-- Username: `sa`
-- Password: (empty)
 
 ## API Endpoints
 
@@ -73,42 +62,3 @@ Access H2 Console at: `http://localhost:8080/h2-console`
 - `POST /api/cleaning-records` - Create new record
 - `PUT /api/cleaning-records/{id}` - Update record
 - `DELETE /api/cleaning-records/{id}` - Delete record
-
-## Deployment to SAP BTP
-
-### Prerequisites
-- CF CLI installed
-- SAP BTP account
-
-### Steps
-
-1. Login to SAP BTP:
-```bash
-cf login -a https://api.cf.sap.hana.ondemand.com
-```
-
-2. Create PostgreSQL service:
-```bash
-cf create-service postgresql-db trial flixcare-postgres
-```
-
-3. Build the application:
-```bash
-mvn clean package
-```
-
-4. Deploy to Cloud Foundry:
-```bash
-cf push
-```
-
-## Database Schema
-
-### Tables
-- `babies` - Baby profiles
-- `feeding_records` - Feeding activity records
-- `temperature_records` - Temperature measurements
-- `cleaning_records` - Diaper changes and bathing records
-
-## License
-Apache 2.0
