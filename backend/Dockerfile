@@ -9,5 +9,5 @@ WORKDIR /app
 COPY --from=build /app/target/flixcare-backend-1.0.0.jar app.jar
 EXPOSE 8080
 ENV SPRING_PROFILES_ACTIVE=production
-ENV JAVA_TOOL_OPTIONS="-Xmx128m -Xms64m -XX:MaxMetaspaceSize=64m -XX:ReservedCodeCacheSize=16m -Xss256k -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -XX:+UseStringDeduplication -XX:+UseContainerSupport"
+ENV JAVA_TOOL_OPTIONS="-Xmx128m -Xms64m -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=32m -Xss256k -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -XX:+UseStringDeduplication -XX:+UseContainerSupport"
 ENTRYPOINT ["java", "-jar", "app.jar"]
