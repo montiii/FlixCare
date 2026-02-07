@@ -2,21 +2,78 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:15-alpine
-    container_name: flixcare-postgres-dev
+    image: postgres:16-alpine
+    container_name: flixcare-postgres
     environment:
       POSTGRES_DB: flixcaredb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      # PostgreSQL Memory Optimizations
+      POSTGRES_SHARED_BUFFERS: 128MB
+      POSTGRES_EFFECTIVE_CACHE_SIZE: 256MB
+      POSTGRES_WORK_MEM: 4MB
+      POSTGRES_MAINTENANCE_WORK_MEM: 32MB
     ports:
       - "5432:5432"
     volumes:
-      - postgres-dev-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: flixcare-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/flixcaredb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      FLIXCARE_USERNAME: ${FLIXCARE_USERNAME:-flixcare}
+      FLIXCARE_PASSWORD: ${FLIXCARE_PASSWORD:-flixcare123}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+        reservations:
+          memory: 256M
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: flixcare-frontend
+    ports:
+      - "3000:80"
+    environment:
+      BACKEND_URL: http://backend:8080
+      VITE_API_BASE_URL: http://backend:8080/api
+    depends_on:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    restart: unless-stopped
 
 volumes:
-  postgres-dev-data:
+  postgres-data:
