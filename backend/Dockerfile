@@ -9,5 +9,21 @@ WORKDIR /app
 COPY --from=build /app/target/flixcare-backend-1.0.0.jar app.jar
 EXPOSE 8080
 ENV SPRING_PROFILES_ACTIVE=production
-ENV JAVA_TOOL_OPTIONS="-Xmx128m -Xms64m -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=32m -Xss256k -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -XX:+UseStringDeduplication -XX:+UseContainerSupport"
+# Aggressive Memory Limits für Railway Container
+# Heap erhöht auf 192m für bessere GC-Effizienz
+# Off-Heap Memory limitiert (DirectMemory, CompressedClassSpace)
+# Target: <350 MB Container RAM
+ENV JAVA_TOOL_OPTIONS="-Xmx192m -Xms128m \
+    -XX:MaxMetaspaceSize=128m \
+    -XX:MetaspaceSize=96m \
+    -XX:ReservedCodeCacheSize=24m \
+    -XX:CompressedClassSpaceSize=16m \
+    -XX:MaxDirectMemorySize=24m \
+    -Xss256k \
+    -XX:+UseSerialGC \
+    -XX:+TieredCompilation \
+    -XX:TieredStopAtLevel=1 \
+    -XX:+UseStringDeduplication \
+    -XX:+UseContainerSupport \
+    -Djava.security.egd=file:/dev/./urandom"
 ENTRYPOINT ["java", "-jar", "app.jar"]
