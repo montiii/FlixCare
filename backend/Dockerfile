@@ -9,4 +9,4 @@ WORKDIR /app
 COPY --from=build /app/target/flixcare-backend-1.0.0.jar app.jar
 EXPOSE 8080
 ENV SPRING_PROFILES_ACTIVE=production
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Xms256m", "-Xmx512m", "-jar", "app.jar"]
