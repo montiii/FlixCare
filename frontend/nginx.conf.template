@@ -1,12 +1,27 @@
-server {
-    listen 80;
-    server_name _;
-    root /usr/share/nginx/html;
-    index index.html;
+worker_processes 1;
+worker_rlimit_nofile 512;
 
-    # Disable access log for memory saving
-    access_log off;
-    error_log /var/log/nginx/error.log warn;
+error_log /var/log/nginx/error.log warn;
+pid /var/run/nginx.pid;
+
+events {
+    worker_connections 256;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # Memory optimization
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 30;
+    types_hash_max_size 2048;
+    client_body_buffer_size 8k;
+    client_header_buffer_size 1k;
+    client_max_body_size 2m;
+    large_client_header_buffers 2 1k;
 
     # Gzip compression
     gzip on;
@@ -15,38 +30,51 @@ server {
     gzip_min_length 1024;
     gzip_proxied any;
     gzip_types text/plain text/css application/json application/javascript application/xml+rss text/javascript image/svg+xml;
+    gzip_disable "msie6";
 
-    location / {
-        try_files $uri $uri/ /index.html;
-        add_header Cache-Control "no-cache";
+    # Disable access log for memory saving
+    access_log off;
+
+    server {
+        listen 80;
+        server_name _;
+        root /usr/share/nginx/html;
+        index index.html;
+
+        location / {
+            try_files $uri $uri/ /index.html;
+            add_header Cache-Control "no-cache";
+        }
+
+        location ~* \.(?:js|css|png|jpg|jpeg|gif|svg|ico|woff2?)$ {
+            expires 30d;
+            add_header Cache-Control "public, max-age=2592000, immutable";
+        }
+
+        location /api {
+            # ${BACKEND_URL} wird zur Laufzeit durch envsubst ersetzt
+            proxy_pass ${BACKEND_URL};
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # Optimized buffering
+            proxy_buffering on;
+            proxy_buffer_size 4k;
+            proxy_buffers 8 4k;
+            proxy_busy_buffers_size 8k;
+
+            # Timeouts
+            proxy_connect_timeout 10s;
+            proxy_send_timeout 30s;
+            proxy_read_timeout 60s;
+
+            proxy_next_upstream error timeout invalid_header http_502 http_503 http_504;
+        }
+
+        error_page 404 /index.html;
     }
-
-    location ~* \.(?:js|css|png|jpg|jpeg|gif|svg|ico|woff2?)$ {
-        expires 30d;
-        add_header Cache-Control "public, max-age=2592000, immutable";
-    }
-
-    location /api {
-        proxy_pass ${BACKEND_URL};
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # Optimized buffering
-        proxy_buffering on;
-        proxy_buffer_size 4k;
-        proxy_buffers 8 4k;
-        proxy_busy_buffers_size 8k;
-
-        # Timeouts
-        proxy_connect_timeout 5s;
-        proxy_send_timeout 30s;
-        proxy_read_timeout 60s;
-
-        proxy_next_upstream error timeout invalid_header http_502 http_503 http_504;
-    }
-
-    error_page 404 /index.html;
 }
+
