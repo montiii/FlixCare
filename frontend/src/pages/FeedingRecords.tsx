@@ -50,7 +50,8 @@ export default function FeedingRecords() {
   const breastFeedingTypes = [
     { type: FeedingType.BREAST_LEFT, label: t.feeding.types.BREAST_LEFT, color: '#e91e63' },
     { type: FeedingType.BREAST_RIGHT, label: t.feeding.types.BREAST_RIGHT, color: '#9c27b0' },
-    { type: FeedingType.BREAST_BOTH, label: t.feeding.types.BREAST_BOTH, color: '#673ab7' },
+    { type: FeedingType.BREAST_START_LEFT, label: t.feeding.types.BREAST_START_LEFT, color: '#673ab7' },
+    { type: FeedingType.BREAST_START_RIGHT, label: t.feeding.types.BREAST_START_RIGHT, color: '#512da8' },
   ];
 
   // Rechts: Flasche/Brei Optionen
@@ -159,7 +160,8 @@ export default function FeedingRecords() {
     const typeLabels: Record<FeedingType, string> = {
       [FeedingType.BREAST_LEFT]: t.feeding.types.BREAST_LEFT,
       [FeedingType.BREAST_RIGHT]: t.feeding.types.BREAST_RIGHT,
-      [FeedingType.BREAST_BOTH]: t.feeding.types.BREAST_BOTH,
+      [FeedingType.BREAST_START_LEFT]: t.feeding.types.BREAST_START_LEFT,
+      [FeedingType.BREAST_START_RIGHT]: t.feeding.types.BREAST_START_RIGHT,
       [FeedingType.BOTTLE_FORMULA]: t.feeding.types.BOTTLE_FORMULA,
       [FeedingType.BOTTLE_BREAST_MILK]: t.feeding.types.BOTTLE_BREAST_MILK,
       [FeedingType.SOLID_FOOD]: t.feeding.types.SOLID_FOOD,

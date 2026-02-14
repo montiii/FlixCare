@@ -51,7 +51,8 @@ export const de = {
     types: {
       BREAST_LEFT: '🤱 Links',
       BREAST_RIGHT: '🤱 Rechts',
-      BREAST_BOTH: '🤱 Beide',
+      BREAST_START_LEFT: '🤱 Beide (start links)',
+      BREAST_START_RIGHT: '🤱 Beide (start rechts)',
       BOTTLE_FORMULA: '🍼 Formula',
       BOTTLE_BREAST_MILK: '🍼 Muttermilch',
       SOLID_FOOD: '🥄 Brei',

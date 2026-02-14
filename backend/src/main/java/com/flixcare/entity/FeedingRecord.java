@@ -53,7 +53,8 @@ public class FeedingRecord {
     public enum FeedingType {
         BREAST_LEFT,
         BREAST_RIGHT,
-        BREAST_BOTH,
+        BREAST_START_LEFT,
+        BREAST_START_RIGHT,
         BOTTLE_FORMULA,
         BOTTLE_BREAST_MILK,
         SOLID_FOOD
