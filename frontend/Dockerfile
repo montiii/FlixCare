@@ -19,6 +19,6 @@ COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80
 
 # Setze Fallback-Wert für BACKEND_URL und generiere finale nginx.conf
-CMD ["/bin/sh", "-c", "export BACKEND_URL=${BACKEND_URL:-http://backend:8080} && export RESOLVER=$(grep -m1 nameserver /etc/resolv.conf | awk '{print $2}') && envsubst '$BACKEND_URL $RESOLVER' < /etc/nginx/templates/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "export BACKEND_URL=${BACKEND_URL:-http://backend:8080} && export RESOLVER=$(grep nameserver /etc/resolv.conf | grep -v ':' | head -1 | awk '{print $2}') && [ -z \"$RESOLVER\" ] && export RESOLVER='8.8.8.8' || true && envsubst '$BACKEND_URL $RESOLVER' < /etc/nginx/templates/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"]
 
 
